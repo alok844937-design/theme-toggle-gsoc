@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Toggle - GSoC Quality</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-bg-light: #ffffff;
+            --color-text-light: #1a1a1a;
+            --color-accent-light: #3b82f6;
+            --color-border-light: #e5e7eb;
+            
+            --color-bg-dark: #1f2937;
+            --color-text-dark: #f3f4f6;
+            --color-accent-dark: #60a5fa;
+            --color-border-dark: #374151;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: var(--color-bg-light);
+            color: var(--color-text-light);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            padding: 20px;
+        }
+
+        body.dark-mode {
+            background-color: var(--color-bg-dark);
+            color: var(--color-text-dark);
+        }
+
+        .header {
+            text-align: center;
+            max-width: 600px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.7;
+            line-height: 1.6;
+        }
+
+        .content {
+            max-width: 600px;
+            border: 1px solid var(--color-border-light);
+            border-radius: 12px;
+            padding: 40px;
+            background-color: var(--color-bg-light);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body.dark-mode .content {
+            background-color: var(--color-bg-dark);
+            border-color: var(--color-border-dark);
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background-color: var(--color-bg-light);
+            border-bottom: 1px solid var(--color-border-light);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 40px;
+        }
+
+        body.dark-mode .navbar {
+            background-color: var(--color-bg-dark);
+            border-color: var(--color-border-dark);
+        }
+
+        .navbar-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .theme-toggle-btn {
+            position: relative;
+            width: 48px;
+            height: 48px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+            outline: none;
+            font-size: 24px;
+        }
+
+        .theme-toggle-btn:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+
+        body.dark-mode .theme-toggle-btn:hover {
+            background-color: rgba(96, 165, 250, 0.1);
+        }
+
+        .theme-toggle-btn:focus-visible {
+            outline: 2px solid var(--color-accent-light);
+            outline-offset: 2px;
+        }
+
+        body.dark-mode .theme-toggle-btn:focus-visible {
+            outline-color: var(--color-accent-dark);
+        }
+
+        .tooltip-container {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tooltip {
+            position: absolute;
+            bottom: calc(100% + 12px);
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            pointer-events: none;
+            z-index: 1000;
+            
+            /* Light mode: WHITE background with DARK text */
+            background-color: #ffffff;
+            color: #1a1a1a;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Dark mode: DARK background with LIGHT text */
+        body.dark-mode .tooltip {
+            background-color: #2d3748;
+            color: #f3f4f6;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            /* Light mode: DARK arrow */
+            border-top: 6px solid #1a1a1a;
+        }
+
+        /* Dark mode: LIGHT arrow */
+        body.dark-mode .tooltip::after {
+            border-top-color: #f3f4f6;
+        }
+
+        .tooltip-container:hover .tooltip,
+        .tooltip-container:focus-within .tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .description {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            opacity: 0.8;
+        }
+
+        .description code {
+            background-color: rgba(59, 130, 246, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        body.dark-mode .description code {
+            background-color: rgba(96, 165, 250, 0.15);
+        }
+
+        .status {
+            padding: 16px;
+            border-radius: 8px;
+            background-color: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid var(--color-accent-light);
+            margin-top: 24px;
+        }
+
+        body.dark-mode .status {
+            background-color: rgba(96, 165, 250, 0.1);
+            border-left-color: var(--color-accent-dark);
+        }
+
+        .status-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .status-text {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .features {
+            list-style: none;
+            margin-top: 24px;
+        }
+
+        .features li {
+            padding: 8px 0;
+            padding-left: 24px;
+            position: relative;
+            font-size: 14px;
+        }
+
+        .features li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-light);
+            font-weight: bold;
+        }
+
+        body.dark-mode .features li::before {
+            color: var(--color-accent-dark);
+        }
+
+        @media (max-width: 640px) {
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .content {
+                padding: 24px;
+            }
+
+            .theme-toggle-btn {
+                width: 44px;
+                height: 44px;
+            }
+
+            .tooltip {
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎨 Theme Toggle Demo</h1>
+        <p>Production-ready dark/light mode with smart tooltips for GSoC</p>
+    </div>
+
+    <div class="content">
+        <div class="navbar">
+            <div class="navbar-title">Navigation Bar</div>
+            
+            <div class="tooltip-container">
+                <button 
+                    class="theme-toggle-btn" 
+                    id="themeToggle" 
+                    aria-label="Toggle theme"
+                    title="Toggle dark/light mode"
+                >
+                    <span id="themeIcon">☀</span>
+                </button>
+                <div class="tooltip" id="tooltip">
+                    <span id="tooltipText">Enable dark mode</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="description">
+            <p>This theme toggle demonstrates:</p>
+        </div>
+
+        <ul class="features">
+            <li>✅ Tooltip perfectly centered above theme icon</li>
+            <li>✅ Light mode: <code>WHITE tooltip background</code></li>
+            <li>✅ Dark mode: <code>DARK tooltip background</code></li>
+            <li>✅ Smooth theme transitions</li>
+            <li>✅ Keyboard accessible (Tab + Enter)</li>
+            <li>✅ Mobile responsive</li>
+            <li>✅ GSoC production-ready</li>
+        </ul>
+
+        <div class="status">
+            <div class="status-title">Current Theme</div>
+            <div class="status-text">
+                Status: <strong id="themeStatus">Light Mode</strong>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const tooltipText = document.getElementById('tooltipText');
+        const themeStatus = document.getElementById('themeStatus');
+
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+            applyTheme(isDark);
+        }
+
+        function applyTheme(isDark) {
+            if (isDark) {
+                document.body.classList.add('dark-mode');
+                themeIcon.textContent = '🌙';
+                tooltipText.textContent = 'Enable light mode';
+                themeStatus.textContent = 'Dark Mode';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeIcon.textContent = '☀';
+                tooltipText.textContent = 'Enable dark mode';
+                themeStatus.textContent = 'Light Mode';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            applyTheme(!isDarkMode);
+        });
+
+        themeToggle.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                themeToggle.click();
+            }
+        });
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
+            if (!localStorage.getItem('theme')) {
+                applyTheme(event.matches);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', initializeTheme);
+    </script>
+</body>
+</html>
